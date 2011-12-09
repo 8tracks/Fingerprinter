@@ -76,7 +76,7 @@ std::string toString(const T& val)
 
 bool plain_isspace(char c)
 {
-   if ( c == ' ' || 
+   if ( c == ' ' ||
         c == '\t' ||
         c == '\n' ||
         c == '\r' )
@@ -107,7 +107,7 @@ string simpleTrim( const string& str )
 
    for ( ; plain_isspace(*rIt) && rIt != str.begin(); --rIt );
    ++rIt;
-   
+
    return string(lIt, rIt);
 }
 
@@ -144,7 +144,7 @@ void getFileInfo( const string& fileName, map<string, string>& urlParams, bool d
       urlParams["filename"] = fileName;
 
    ///////////////////////////////////////////////////////////////////////////
-   // SHA256  
+   // SHA256
 
    const int SHA_SIZE = 32;
    unsigned char sha256[SHA_SIZE]; // 32 bytes
@@ -161,7 +161,7 @@ void getFileInfo( const string& fileName, map<string, string>& urlParams, bool d
    try
    {
       TagLib::MPEG::File f(fileName.c_str());
-      if( f.isValid() && f.tag() ) 
+      if( f.isValid() && f.tag() )
       {
          TagLib::Tag* pTag = f.tag();
 
@@ -196,7 +196,7 @@ void getFileInfo( const string& fileName, map<string, string>& urlParams, bool d
 
 string fetchMetadata(int fpid, HTTPClient& client, bool justURL)
 {
-   ostringstream oss; 
+   ostringstream oss;
    oss << METADATA_SERVER_NAME
        << "?method=track.getfingerprintmetadata"
        << "&fingerprintid=" << fpid
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
       string fileName = string(argv[0]);
       size_t lastSlash = fileName.find_last_of(SLASH);
       if ( lastSlash != string::npos )
-         fileName = fileName.substr(lastSlash+1);      
+         fileName = fileName.substr(lastSlash+1);
 
       cout << fileName << " (" << PUBLIC_CLIENT_NAME << ")\n"
            << "A minimal fingerprint client, public release.\n"
@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
    }
 
    //////////////////////////////////////////////////////////////////////////
-   
+
    {
       // check if it exists
       ifstream checkFile(mp3FileName.c_str(), ios::binary);
@@ -329,9 +329,9 @@ int main(int argc, char* argv[])
 
    if ( static_cast<size_t>(duration * 1000) < fingerprint::FingerprintExtractor::getMinimumDurationMs() )
    {
-      cerr << "ERROR: Song duration is " << duration 
-           << "s! Minimum required is: " 
-           << static_cast<int>( fingerprint::FingerprintExtractor::getMinimumDurationMs() / 1000 ) 
+      cerr << "ERROR: Song duration is " << duration
+           << "s! Minimum required is: "
+           << static_cast<int>( fingerprint::FingerprintExtractor::getMinimumDurationMs() / 1000 )
            << "s" << endl;
       exit(1);
    }
@@ -353,12 +353,12 @@ int main(int argc, char* argv[])
 
    size_t version = fextr.getVersion();
    // wow, that's odd.. If I god directly with getVersion I get a strange warning with VS2005.. :P
-   urlParams["fpversion"]  = toString( version ); 
+   urlParams["fpversion"]  = toString( version );
 
    // that's for the mp3
    MP3_Source mp3Source;
    // the buffer can be any size, but FingerprintExtractor is happier (read: faster) with 2^x
-   const size_t PCMBufSize = 131072; 
+   const size_t PCMBufSize = 131072;
    short* pPCMBuffer = new short[PCMBufSize];
 
    try
@@ -366,13 +366,13 @@ int main(int argc, char* argv[])
       mp3Source.init(mp3FileName);
       mp3Source.skipSilence();
 
-      //////////////////////////////////////////////////////////////////////////      
-      // that's not mandatory: it's just to speed up things. 
+      //////////////////////////////////////////////////////////////////////////
+      // that's not mandatory: it's just to speed up things.
       // IMPORTANT: DO NOT DO IT WHEN FingerprintExtractor HAS BEEN SET TO initForFullSubmit !!!
       mp3Source.skip( static_cast<int>(fextr.getToSkipMs()) );
       // send a null pointer, since that's data it's ignored anyway
       fextr.process( 0, static_cast<size_t>(samplerate * nchannels * (fextr.getToSkipMs() / 1000.0)) );
-      //////////////////////////////////////////////////////////////////////////      
+      //////////////////////////////////////////////////////////////////////////
 
       for (;;)
       {
@@ -393,10 +393,32 @@ int main(int argc, char* argv[])
       // get the fingerprint data
       pair<const char*, size_t> fpData = fextr.getFingerprint();
 
+
+      // Output URL PARAMS
+      cout << "URL params:" << endl;
+      map<std::string, std::string>::iterator i;
+      for(i = urlParams.begin(); i != urlParams.end(); i++){
+        cout << i->first << ": " << i->second << endl;
+      }
+      cout << endl;
+
+      map<std::string, std::string> my_url_params;
+      my_url_params["artist"]     = "Rod Stewart";
+      my_url_params["duration"]   = "326";
+      my_url_params["filename"]   = "Rod.mp3";
+      my_url_params["fpversion"]  = "1";
+      my_url_params["genre"]      = "Other";
+      my_url_params["samplerate"] = "44100";
+      my_url_params["sha256"]     = "fc4ef891e220ab751ee1328abaf1d40916ec1dba35dee4807a69001c9047f185";
+      my_url_params["username"]   = "fp client 1.6";
+
       // send the fingerprint data, and get the fingerprint ID
       HTTPClient client;
-      string c = client.postRawObj( serverName, urlParams, 
-                                    fpData.first, fpData.second, 
+      // string c = client.postRawObj( serverName, urlParams,
+                                    // fpData.first, fpData.second,
+                                    // HTTP_POST_DATA_NAME, false );
+      string c = client.postRawObj( serverName, my_url_params,
+                                    fpData.first, fpData.second,
                                     HTTP_POST_DATA_NAME, false );
       int fpid;
       istringstream iss(c);
