@@ -21,6 +21,8 @@
 // for fingerprint
 #include "../../fplib/include/FingerprintExtractor.h"
 
+#include <sndfile.hh>
+
 #include "MP3_Source.h" // to decode mp3s
 #include "HTTPClient.h" // for connection
 
@@ -303,38 +305,26 @@ int main(int argc, char* argv[])
          cerr << "ERROR: Cannot find file <" << mp3FileName << ">!" << endl;
          exit(1);
       }
-
-      // checks if it is an mp3 (very un-elegant)
-      size_t filenamelen = mp3FileName.length();
-      if ( filenamelen < 5 || mp3FileName.substr(filenamelen-4, 4) != ".mp3" )
-      {
-         string ext = mp3FileName.substr(filenamelen-4, 4);
-         // the weird casting on tolower is to please gcc on ambiguities
-         std::transform(ext.begin(), ext.end(), ext.begin(), (int(*)(int))std::tolower);
-         if ( ext != ".mp3" )
-         {
-            cerr << "Sorry, only MP3 files are currently supported. But other formats will follow soon!" << endl;
-            exit(1);
-         }
-      }
    }
 
    // this map holds the parameters that will be put into the URL
    map<std::string, std::string> urlParams;
 
-   getFileInfo(mp3FileName, urlParams, doTagLib);
-
    int duration, samplerate, bitrate, nchannels;
-   MP3_Source::getInfo(mp3FileName, duration, samplerate, bitrate, nchannels);
+   // TODO Make this work via arguments
+   duration = 326;
+   samplerate = 44100;
+   nchannels = 2;
+   // MP3_Source::getInfo(mp3FileName, duration, samplerate, bitrate, nchannels);
 
-   if ( static_cast<size_t>(duration * 1000) < fingerprint::FingerprintExtractor::getMinimumDurationMs() )
-   {
-      cerr << "ERROR: Song duration is " << duration
-           << "s! Minimum required is: "
-           << static_cast<int>( fingerprint::FingerprintExtractor::getMinimumDurationMs() / 1000 )
-           << "s" << endl;
-      exit(1);
-   }
+   // if ( static_cast<size_t>(duration * 1000) < fingerprint::FingerprintExtractor::getMinimumDurationMs() )
+   // {
+      // cerr << "ERROR: Song duration is " << duration
+           // << "s! Minimum required is: "
+           // << static_cast<int>( fingerprint::FingerprintExtractor::getMinimumDurationMs() / 1000 )
+           // << "s" << endl;
+      // exit(1);
+   // }
 
    // WARNING!!! This is absolutely mandatory!
    // If you don't specify the right duration you will not get the correct result!
@@ -346,6 +336,20 @@ int main(int argc, char* argv[])
    urlParams["username"]   = PUBLIC_CLIENT_NAME; // replace with username if possible
    urlParams["samplerate"] = toString(samplerate);
 
+  // static short buffer [BUFFER_LEN] ;
+
+  SndfileHandle infile ;
+
+	infile = SndfileHandle(mp3FileName);
+
+  cout << "Opened file " << mp3FileName << endl;
+  cout << "Sample rate: " << infile.samplerate() << endl;
+  cout << "Channels: " << infile.channels() << endl;
+
+	// file.read (buffer, BUFFER_LEN) ;
+
+	puts ("") ;
+
    // This will extract the fingerprint
    // IMPORTANT: FingerprintExtractor assumes the data starts from the beginning of the file!
    fingerprint::FingerprintExtractor fextr;
@@ -356,38 +360,24 @@ int main(int argc, char* argv[])
    urlParams["fpversion"]  = toString( version );
 
    // that's for the mp3
-   MP3_Source mp3Source;
+   // MP3_Source mp3Source;
    // the buffer can be any size, but FingerprintExtractor is happier (read: faster) with 2^x
    const size_t PCMBufSize = 131072;
    short* pPCMBuffer = new short[PCMBufSize];
 
    try
    {
-      mp3Source.init(mp3FileName);
-      mp3Source.skipSilence();
 
-      //////////////////////////////////////////////////////////////////////////
-      // that's not mandatory: it's just to speed up things.
-      // IMPORTANT: DO NOT DO IT WHEN FingerprintExtractor HAS BEEN SET TO initForFullSubmit !!!
-      mp3Source.skip( static_cast<int>(fextr.getToSkipMs()) );
-      // send a null pointer, since that's data it's ignored anyway
-      fextr.process( 0, static_cast<size_t>(samplerate * nchannels * (fextr.getToSkipMs() / 1000.0)) );
-      //////////////////////////////////////////////////////////////////////////
+      for (;;) {
 
-      for (;;)
-      {
-         // read some data from the mp3
-         size_t readData = mp3Source.updateBuffer(pPCMBuffer, PCMBufSize);
-         if ( readData == 0 )
-         {
-            cerr << "ERROR: Insufficient input data!" << endl;
-            exit(1);
-         }
+        size_t read_data = infile.read(pPCMBuffer, PCMBufSize / 2);
 
-         // Process to create the fingerprint. If process returns true
-         // it means he's happy with what he has.
-         if ( fextr.process( pPCMBuffer, readData, mp3Source.eof() ) )
-            break;
+        cout << *pPCMBuffer << endl;
+
+        if(fextr.process(pPCMBuffer, read_data)){
+          break;
+        }
+
       }
 
       // get the fingerprint data
@@ -400,6 +390,11 @@ int main(int argc, char* argv[])
       for(i = urlParams.begin(); i != urlParams.end(); i++){
         cout << i->first << ": " << i->second << endl;
       }
+      cout << endl;
+
+      cout << "Fingerprinter data:" << endl;
+      cout << fpData.first << endl;
+      cout << fpData.second << endl;
       cout << endl;
 
       map<std::string, std::string> my_url_params;
