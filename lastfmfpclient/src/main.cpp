@@ -22,6 +22,7 @@
 #include "../../fplib/include/FingerprintExtractor.h"
 
 #include <sndfile.hh>
+#include <cmath>
 
 //#include "MP3_Source.h" // to decode mp3s
 #include "HTTPClient.h" // for connection
@@ -162,7 +163,7 @@ int main(int argc, char* argv[])
   }
 
   string wav_file_name;
-  int duration = -1, samplerate = -1, nchannels = -1;
+  int duration, samplerate, nchannels;
   string artist;
   string filename;
   string sha256;
@@ -179,7 +180,6 @@ int main(int argc, char* argv[])
 
   // man, I am so used to boost::program_options that I suck at writing command line parsers now
 
-  cout << "argc: " << argc << endl;
   for(int i = 1; i < argc; ++i )
   {
     if ( argv[i][0] != '-' )
@@ -189,8 +189,6 @@ int main(int argc, char* argv[])
     }
 
     string arg(argv[i]);
-
-    cout << "Argument: " << arg << endl;
 
     if(arg == "-duration" && (i+1) < argc) {
       duration = atoi(argv[++i]);
@@ -250,24 +248,13 @@ int main(int argc, char* argv[])
     }
   }
 
-  // Check for input - all these are required
-  {
-    if(duration <= 0) {
-      cerr << "ERROR: Duration must be > 0." << endl;
-      exit(1);
-    }
 
-    if(nchannels < 1) {
-      cerr << "ERROR: Channels must be 1 or more." << endl;
-      exit(1);
-    }
+  SndfileHandle infile ;
+  infile = SndfileHandle(wav_file_name);
 
-    if (samplerate < 1) {
-      cerr << "ERROR: Samplerate must be > 0." << endl;
-      exit(1);
-    }
-  }
-
+  nchannels = infile.channels();
+  samplerate = infile.samplerate();
+  duration = ceil(infile.frames() / samplerate);
 
   // WARNING!!! This is absolutely mandatory!
   // If you don't specify the right duration you will not get the correct result!
@@ -275,9 +262,6 @@ int main(int argc, char* argv[])
   urlParams["duration"]   = toString(duration); // this is absolutely mandatory
   urlParams["username"]   = PUBLIC_CLIENT_NAME; // replace with username if possible
   urlParams["samplerate"] = toString(samplerate);
-
-  SndfileHandle infile ;
-  infile = SndfileHandle(wav_file_name);
 
 
   // This will extract the fingerprint
