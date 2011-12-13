@@ -190,17 +190,8 @@ int main(int argc, char* argv[])
 
     string arg(argv[i]);
 
-    if(arg == "-duration" && (i+1) < argc) {
-      duration = atoi(argv[++i]);
-    }
-    else if(arg == "-samplerate" && (i+1) < argc) {
-      samplerate = atoi(argv[++i]);
-    }
-    else if(arg == "-channels" && (i+1) < argc) {
-      nchannels = atoi(argv[++i]);
-    }
     // Metadata
-    else if(arg == "-artist" && (i+1) < argc) {
+    if(arg == "-artist" && (i+1) < argc) {
       urlParams["artist"] = argv[++i];
     }
     else if(arg == "-album" && (i+1) < argc) {
