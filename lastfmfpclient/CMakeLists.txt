@@ -22,9 +22,7 @@ ENDIF(APPLE)
 ADD_EXECUTABLE( lastfmfpclient
                   src/main.cpp
                   src/HTTPClient.cpp
-                  src/MP3_Source.cpp
-                  src/Sha256.cpp
-                  src/Sha256File.cpp )
+ )
 
 TARGET_LINK_LIBRARIES(lastfmfpclient lastfmfp_static sndfile fftw3f mad tag curl samplerate)
 
