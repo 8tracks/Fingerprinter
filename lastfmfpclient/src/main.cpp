@@ -234,7 +234,6 @@ int main(int argc, char* argv[])
     }
   }
 
-
   SndfileHandle infile ;
   infile = SndfileHandle(wav_file_name);
 
@@ -270,7 +269,6 @@ int main(int argc, char* argv[])
   {
 
     for (;;) {
-
       size_t read_data = infile.read(pPCMBuffer, PCMBufSize / nchannels);
       if(fextr.process(pPCMBuffer, read_data)){
         break;
