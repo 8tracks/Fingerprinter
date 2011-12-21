@@ -154,11 +154,7 @@ int main(int argc, char* argv[])
 
     cout << fileName << " (" << PUBLIC_CLIENT_NAME << ")\n"
       << "Usage:\n"
-      << fileName << " [options] yourMp3File.mp3\n\n"
-      << "REQUIRED OPTIONS:\n"
-      << " -duration: length of song in seconds\n"
-      << " -samplerate: something like 44100\n"
-      << " -channels: # of channels (1 or 2)\n";
+      << fileName << " [options] yourWavFile.wav\n\n"
     exit(0);
   }
 
@@ -221,7 +217,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      cout << "Invalid option or parameter <" << argv[i] << ">\n";
+      cerr << "Invalid option or parameter <" << argv[i] << ">\n";
       exit(1);
     }
   }
