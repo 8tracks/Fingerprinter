@@ -153,8 +153,7 @@ int main(int argc, char* argv[])
       fileName = fileName.substr(lastSlash+1);
 
     cout << fileName << " (" << PUBLIC_CLIENT_NAME << ")\n"
-      << "Usage:\n"
-      << fileName << " [options] yourWavFile.wav\n\n"
+      << "Usage:\n" << fileName << " [options] yourWavFile.wav\n\n";
     exit(0);
   }
 
