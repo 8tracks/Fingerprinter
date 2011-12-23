@@ -241,6 +241,11 @@ int main(int argc, char* argv[])
   samplerate = infile.samplerate();
   duration = ceil(infile.frames() / samplerate);
 
+  if(duration < 30) {
+    cerr << "ERROR: Song duration is too short." << endl;
+    exit(1);
+  }
+
   // WARNING!!! This is absolutely mandatory!
   // If you don't specify the right duration you will not get the correct result!
   // This has to be passed in.
@@ -272,6 +277,12 @@ int main(int argc, char* argv[])
       size_t read_data = infile.read(pPCMBuffer, PCMBufSize / nchannels);
       if(fextr.process(pPCMBuffer, read_data)){
         break;
+      }
+
+      // We've reached the end of the file OR the file didn't have enough information
+      if(read_data == 0){
+        cerr << "ERROR: Insufficient input data!" << endl;
+        exit(1);
       }
 
     }
