@@ -48,6 +48,8 @@ HTTPClient::HTTPClient()
    // some servers don't like requests that are made without a user-agent
    // field, so we provide one
    curl_easy_setopt(m_pCurlHandle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+   curl_easy_setopt(m_pCurlHandle, CURLOPT_TIMEOUT, 4);
 }
 
 // -----------------------------------------------------------------------------
@@ -69,7 +71,7 @@ bool HTTPClient::setCookie( const string& cookieFileName )
 
 // -----------------------------------------------------------------------------
 
-string HTTPClient::postRawObj( const std::string& url, 
+string HTTPClient::postRawObj( const std::string& url,
                                const char* pData, size_t dataSize,
                                const string& dataName,
                                bool encode )
@@ -80,8 +82,8 @@ string HTTPClient::postRawObj( const std::string& url,
 
 // -----------------------------------------------------------------------------
 
-string HTTPClient::postRawObj( const std::string& url, 
-                               const map<string, string>& urlParams, 
+string HTTPClient::postRawObj( const std::string& url,
+                               const map<string, string>& urlParams,
                                const char* pData, size_t dataSize,
                                const string& dataName, bool encode )
 {
@@ -104,9 +106,9 @@ string HTTPClient::postRawObj( const std::string& url,
       pDataEnc = curl_easy_escape(m_pCurlHandle, pData, static_cast<int>(dataSize) );
    else
    {
-      curl_formadd( &pFormpost, &pLast, 
+      curl_formadd( &pFormpost, &pLast,
                     CURLFORM_PTRNAME, dName.c_str(),
-                    CURLFORM_PTRCONTENTS, pData, 
+                    CURLFORM_PTRCONTENTS, pData,
                     CURLFORM_CONTENTSLENGTH, dataSize,
                     CURLFORM_END);
    }
@@ -123,7 +125,7 @@ string HTTPClient::postRawObj( const std::string& url,
 
       curl_free(pEntryName);
       curl_free(pEntryVal);
-          
+
       ++mIt;
 
       for ( ; mIt != urlParams.end(); ++mIt )
@@ -216,7 +218,7 @@ size_t HTTPClient::httpFetch( void *ptr, size_t size, size_t nmemb, void *pData 
 
    size_t realsize = size * nmemb;
    size_t startSize = pBuf->size();
-   
+
    pBuf->resize(startSize + realsize);
    memcpy( &((*pBuf)[startSize]), ptr, realsize );
 
