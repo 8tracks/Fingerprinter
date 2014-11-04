@@ -23,6 +23,7 @@
 
 #include <sndfile.hh>
 #include <cmath>
+#include <stdlib.h>
 
 //#include "MP3_Source.h" // to decode mp3s
 #include "HTTPClient.h" // for connection
@@ -56,12 +57,12 @@ using namespace std;
 // DO NOT CHANGE THOSE!
 const char FP_SERVER_NAME[]       = "ws.audioscrobbler.com/fingerprint/query/";
 const char METADATA_SERVER_NAME[] = "http://ws.audioscrobbler.com/2.0/";
-const char PUBLIC_CLIENT_NAME[]   = "fp client 1.6";
+const char PUBLIC_CLIENT_NAME[]   = "8tracks FP";
 const char HTTP_POST_DATA_NAME[]  = "fpdata";
 
 // if you want to use the last.fm fingerprint library in your app you'll need
 // your own key
-const char LASTFM_API_KEY[] = "2bfed60da64b96c16ea77adbf5fe1a82";
+char * LASTFM_API_KEY;
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -145,6 +146,13 @@ string fetchMetadata(int fpid, HTTPClient& client, bool justURL)
 
 int main(int argc, char* argv[])
 {
+
+  LASTFM_API_KEY = getenv("LASTFM_API_KEY");
+  if (LASTFM_API_KEY == NULL) {
+    cout << "You need to specify the LASTFM_API_KEY env variable" << endl;
+    exit(1);
+  }
+
   if ( argc < 2 )
   {
     string fileName = string(argv[0]);
